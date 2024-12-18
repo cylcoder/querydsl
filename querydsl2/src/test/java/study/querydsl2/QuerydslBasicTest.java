@@ -60,6 +60,35 @@ class QuerydslBasicTest {
                 .where(member.username.eq("member1"))
                 .fetchOne();
 
+        assertThat(findMember).isNotNull();
+
+        assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
+
+    @Test
+    void search() {
+        Member findMember = factory
+                .selectFrom(member)
+                .where(member.username.eq("member1")
+                        .and(member.age.eq(10)))
+                .fetchOne();
+
+        assertThat(findMember).isNotNull();
+
+        assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
+
+    @Test
+    void searchAndParam() {
+        Member findMember = factory
+                .selectFrom(member)
+                .where(
+                        member.username.eq("member1"),
+                        member.age.eq(10))
+                .fetchOne();
+
+        assertThat(findMember).isNotNull();
+
         assertThat(findMember.getUsername()).isEqualTo("member1");
     }
 
