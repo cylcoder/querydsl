@@ -154,4 +154,37 @@ class QuerydslBasicTest {
                 );
     }
 
+    @Test
+    void paging1() {
+        List<Member> members = factory
+                .selectFrom(member)
+                .orderBy(member.username.desc())
+                .offset(2)
+                .limit(2)
+                .fetch();
+
+        assertThat(members)
+                .hasSize(2)
+                .extracting("username", "age")
+                .containsExactly(
+                        tuple("member2", 20),
+                        tuple("member1", 10)
+                );
+    }
+
+    @Test
+    void paging2() {
+        QueryResults<Member> queryResults = factory
+                .selectFrom(member)
+                .orderBy(member.username.desc())
+                .offset(2)
+                .limit(2)
+                .fetchResults();
+
+        assertThat(queryResults.getTotal()).isEqualTo(4);
+        assertThat(queryResults.getLimit()).isEqualTo(2);
+        assertThat(queryResults.getOffset()).isEqualTo(2);
+        assertThat(queryResults.getResults()).hasSize(2);
+    }
+
 }
