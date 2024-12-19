@@ -2,11 +2,8 @@ package study.querydsl2;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
-import com.querydsl.core.types.ExpressionUtils;
-import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -15,8 +12,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl2.dto.MemberDto;
+import study.querydsl2.dto.QMemberDto;
 import study.querydsl2.dto.UserDto;
 import study.querydsl2.entity.Member;
 import study.querydsl2.entity.QMember;
@@ -26,7 +25,6 @@ import java.util.List;
 
 import static com.querydsl.core.types.ExpressionUtils.*;
 import static com.querydsl.core.types.Projections.*;
-import static com.querydsl.jpa.JPAExpressions.*;
 import static com.querydsl.jpa.JPAExpressions.select;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -593,6 +591,18 @@ class QuerydslBasicTest {
 
         for (UserDto user : users) {
             System.out.println("user = " + user);
+        }
+    }
+
+    @Test
+    void findDtoByQueryProjection() {
+        List<MemberDto> members = factory
+                .select(new QMemberDto(QMember.member.username, QMember.member.age))
+                .from(QMember.member)
+                .fetch();
+
+        for (MemberDto member : members) {
+            System.out.println("member = " + member);
         }
     }
 
