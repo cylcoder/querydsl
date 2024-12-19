@@ -2,6 +2,7 @@ package study.querydsl2;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -434,6 +435,38 @@ class QuerydslBasicTest {
 
         for (Tuple tuple : tuples) {
             System.out.println("tuple = " + tuple);
+        }
+    }
+
+    @Test
+    void basicCase() {
+        List<String> ages = factory
+                .select(member.age
+                        .when(10).then("ten")
+                        .when(20).then("twenty")
+                        .otherwise("other"))
+                .from(member)
+                .fetch();
+
+        for (String age : ages) {
+            System.out.println("age = " + age);
+        }
+    }
+
+    @Test
+    void complexCase() {
+        List<String> ages = factory
+                .select(
+                        new CaseBuilder()
+                                .when(member.age.between(0, 20)).then("0-20")
+                                .when(member.age.between(21, 30)).then("21-30")
+                                .otherwise("other")
+                )
+                .from(member)
+                .fetch();
+
+        for (String age : ages) {
+            System.out.println("age = " + age);
         }
     }
 
