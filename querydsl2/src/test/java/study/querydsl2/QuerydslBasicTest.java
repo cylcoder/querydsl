@@ -4,6 +4,8 @@ import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -320,6 +322,39 @@ class QuerydslBasicTest {
         for (Tuple tuple : tuples) {
             System.out.println("tuple = " + tuple);
         }
+    }
+
+    @PersistenceUnit
+    EntityManagerFactory emf;
+
+    @Test
+    void noFetchJoin() {
+        em.flush();
+        em.clear();
+
+        Member findMember = factory
+                .selectFrom(member)
+                .where(member.username.eq("member1"))
+                .fetchOne();
+
+        assertThat(findMember).isNotNull();
+        assertThat(emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam())).isFalse();
+    }
+
+    @Test
+    void fetchJoin() {
+        em.flush();
+        em.clear();
+
+        Member findMember = factory
+                .selectFrom(member)
+                .join(member.team, team)
+                .fetchJoin()
+                .where(member.username.eq("member1"))
+                .fetchOne();
+
+        assertThat(findMember).isNotNull();
+        assertThat(emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam())).isTrue();
     }
 
 }
