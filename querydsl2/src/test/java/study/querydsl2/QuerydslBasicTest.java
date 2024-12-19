@@ -2,8 +2,11 @@ package study.querydsl2;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -13,12 +16,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import study.querydsl2.dto.MemberDto;
+import study.querydsl2.dto.UserDto;
 import study.querydsl2.entity.Member;
 import study.querydsl2.entity.QMember;
 import study.querydsl2.entity.Team;
 
 import java.util.List;
 
+import static com.querydsl.core.types.ExpressionUtils.*;
+import static com.querydsl.core.types.Projections.*;
+import static com.querydsl.jpa.JPAExpressions.*;
 import static com.querydsl.jpa.JPAExpressions.select;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -518,6 +526,75 @@ class QuerydslBasicTest {
         }
     }
 
-    
+    @Test
+    void findDtoByJPQL() {
+        List<MemberDto> members = em.createQuery("select new study.querydsl2.dto.MemberDto(m.username, m.age) from Member m", MemberDto.class)
+                .getResultList();
+
+        for (MemberDto member : members) {
+            System.out.println("member = " + member);
+        }
+    }
+
+    @Test
+    void findDtoBySetter() {
+        /*
+        * setter를 이용한 프로퍼티 접근의 경우 기본 생성자로 객체를 생성한 뒤
+        * setter로 값을 채워넣으므로 기본 생성자가 필수로 있어야 한다.
+        * */
+
+        List<MemberDto> members = factory
+                .select(bean(MemberDto.class, member.username, member.age))
+                .from(member)
+                .fetch();
+
+        for (MemberDto member : members) {
+            System.out.println("member = " + member);
+        }
+    }
+
+    @Test
+    void findDtoByField() {
+        List<MemberDto> members = factory
+                .select(fields(MemberDto.class, member.username, member.age))
+                .from(member)
+                .fetch();
+
+        for (MemberDto member : members) {
+            System.out.println("member = " + member);
+        }
+    }
+
+    @Test
+    void findDtoByConstructor() {
+        List<MemberDto> members = factory
+                .select(constructor(MemberDto.class, member.username, member.age))
+                .from(member)
+                .fetch();
+
+        for (MemberDto member : members) {
+            System.out.println("member = " + member);
+        }
+    }
+
+    @Test
+    void findUserDto() {
+        QMember memberSub = new QMember("memberSub");
+
+        List<UserDto> users = factory
+                .select(fields(
+                        UserDto.class,
+                        member.username.as("name"),
+                        as(
+                            select(memberSub.age.max())
+                            .from(memberSub), "age")))
+                .from(member)
+                .fetch();
+
+        for (UserDto user : users) {
+            System.out.println("user = " + user);
+        }
+    }
+
 
 }
