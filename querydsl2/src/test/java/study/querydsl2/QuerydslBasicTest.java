@@ -14,6 +14,7 @@ import study.querydsl2.entity.Team;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static study.querydsl2.entity.QMember.member;
 
 @SpringBootTest
@@ -120,6 +121,37 @@ class QuerydslBasicTest {
         long fetchCount = factory
                 .selectFrom(member)
                 .fetchCount();
+    }
+
+    /*
+    * 회원 정렬 기준
+    * 1. 회원 나이 내림차순
+    * 2. 회원 이름 올림차순
+    * 3. 회원 이름이 null이라면 마지막에 출력
+    * */
+    @Test
+    void sort() {
+        em.persist(new Member(null, 100));
+        em.persist(new Member("member5", 100));
+        em.persist(new Member("member6", 100));
+
+        List<Member> members = factory
+                .selectFrom(member)
+                .where(member.age.eq(100))
+                .orderBy(
+                        member.age.desc(),
+                        member.username.asc().nullsLast()
+                )
+                .fetch();
+
+        assertThat(members)
+                .hasSize(3)
+                .extracting("username", "age")
+                .containsExactly(
+                        tuple("member5", 100),
+                        tuple("member6", 100),
+                        tuple(null, 100)
+                );
     }
 
 }
