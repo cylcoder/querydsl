@@ -1,11 +1,12 @@
 package study.querydsl2.repository;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 import study.querydsl2.dto.MemberSearchCondition;
 import study.querydsl2.dto.MemberTeamDto;
 import study.querydsl2.dto.QMemberTeamDto;
@@ -68,6 +69,9 @@ public class MemberJpaRepository {
     }
 
     public List<MemberTeamDto> searchByBuilder(MemberSearchCondition condition) {
+        /*
+        * BooleanBuilder를 사용하는 경우 아래와 같이 불필요한 코드가 발생한다.
+        * */
         BooleanBuilder builder = new BooleanBuilder();
 
         if (hasText(condition.getUsername())) {
@@ -98,6 +102,49 @@ public class MemberJpaRepository {
                 .join(member.team, team)
                 .where(builder)
                 .fetch();
+    }
+
+    public List<MemberTeamDto> search(MemberSearchCondition condition) {
+        /*
+        * Where절 파라미터를 사용하는 경우 직관적이고 깔끔한 쿼리문을 볼 수 있다.
+        * */
+        return factory
+                .select(new QMemberTeamDto(
+                        member.id.as("memberId"),
+                        member.username,
+                        member.age,
+                        team.id.as("teamId"),
+                        team.name.as("teamName"))
+                )
+                .from(member)
+                .join(member.team, team)
+                .where(
+                        usernameEq(condition.getUsername()),
+                        teamNameEq(condition.getTeamName()),
+                        ageGoe(condition.getAgeGoe()),
+                        ageLoe(condition.getAgeLoe())
+                )
+                .fetch();
+    }
+
+    private BooleanExpression ageBetween(int ageGoe, int ageLoe) {
+        return ageGoe(ageGoe).and(ageLoe(ageLoe));
+    }
+
+    private BooleanExpression usernameEq(String username) {
+        return hasText(username) ? member.username.eq(username) : null;
+    }
+
+    private BooleanExpression teamNameEq(String teamName) {
+        return hasText(teamName) ? team.name.eq(teamName) : null;
+    }
+
+    private BooleanExpression ageGoe(Integer ageGoe) {
+        return ageGoe != null ? member.age.goe(ageGoe) : null;
+    }
+
+    private BooleanExpression ageLoe(Integer ageLoe) {
+        return ageLoe != null ? member.age.loe(ageLoe) : null;
     }
 
 }
