@@ -3,6 +3,8 @@ package study.querydsl2;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -23,6 +25,7 @@ import study.querydsl2.entity.QMember;
 import study.querydsl2.entity.Team;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import static com.querydsl.core.types.ExpressionUtils.*;
 import static com.querydsl.core.types.Projections.*;
@@ -633,5 +636,70 @@ class QuerydslBasicTest {
                 .fetch();
     }
 
+    @Test
+    void dynamicQueryWhereParam() {
+        String usernameParam = null;
+        Integer ageParam = 10;
+
+        List<Member> members = searchMember2(usernameParam, ageParam);
+    }
+
+    private List<Member> searchMember2(String usernameCond, Integer ageCond) {
+        return factory
+                .selectFrom(member)
+//                .where(usernameEq(usernameCond), ageEq(ageCond)) // 첫번째 방법
+//                .where(allEq(usernameCond, ageCond)) // 두번째 방법
+                .where(allEqBuilder(usernameCond, ageCond)) // 세번째 방법
+                .fetch();
+    }
+
+    /*
+    * 첫번째 방법 : usernameEq()과 ageEq() 내에 null 처리를 한 뒤 각각 호출
+    * */
+
+    private BooleanExpression usernameEq(String usernameCond) {
+        return usernameCond != null ? member.username.eq(usernameCond) : null;
+    }
+
+    private BooleanExpression ageEq(Integer ageCond) {
+        return ageCond != null ? member.age.eq(ageCond) : null;
+    }
+
+    /*
+     * 두번째 방법 : usernameEq()과 ageEq()을 합쳐서 한번에 호출
+     * 이 방식은 usernameEq()의 리턴값이 null인 경우 null.and()가 되므로 에러가 발생한다.
+     * 따라서 null 체크를 따로 해줘야하는 불편이 있다.
+     * */
+
+    private BooleanExpression allEq(String usernameCond, Integer ageCond) {
+        return usernameEq(usernameCond).and(ageEq(ageCond));
+    }
+
+    /*
+    * 세번째 방법 : null이 아닌 BooleanBuilder를 반환
+    * 이 방식은 null인 경우 빈 BooleanBuilder를,
+    * null이 아니라면 BooleanBuilder()의 파라미터에 조건식을 넣어서 전달한다.
+    * 따라서 null이여도 빈 BooleanBuilder는 and() 연산이 가능하다.
+    * 이를 더 간단하게 하기 위해 Supplier를 활용할 수 있다.
+    * */
+    private BooleanBuilder nullSafeBuilder(Supplier<BooleanExpression> f) {
+        try {
+            return new BooleanBuilder(f.get());
+        } catch (IllegalArgumentException e) {
+            return new BooleanBuilder();
+        }
+    }
+
+    private BooleanBuilder usernameEqBuilder(String usernameCond) {
+        return nullSafeBuilder(() -> member.username.eq(usernameCond));
+    }
+
+    private BooleanBuilder ageEqBuilder(Integer ageCond) {
+        return nullSafeBuilder(() -> member.age.eq(ageCond));
+    }
+
+    private BooleanBuilder allEqBuilder(String usernameCond, Integer ageCond) {
+        return usernameEqBuilder(usernameCond).and(ageEqBuilder(ageCond));
+    }
 
 }
