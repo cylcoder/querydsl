@@ -28,6 +28,7 @@ import java.util.function.Supplier;
 
 import static com.querydsl.core.types.ExpressionUtils.as;
 import static com.querydsl.core.types.Projections.*;
+import static com.querydsl.core.types.dsl.Expressions.*;
 import static com.querydsl.jpa.JPAExpressions.select;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -729,6 +730,37 @@ class QuerydslBasicTest {
                 .delete(member)
                 .where(member.age.lt(20))
                 .execute();
+    }
+
+    @Test
+    void sqlFunction() {
+        List<String> strings = factory
+                .select(
+                        stringTemplate(
+                                "function('replace', {0}, {1}, {2})",
+                                member.username, "member", "m"))
+                .from(member)
+                .fetch();
+
+        for (String string : strings) {
+            System.out.println("string = " + string);
+        }
+    }
+
+    @Test
+    void sqlFunction2() {
+        List<String> strings = factory
+                .select(member.username)
+                .from(member)
+                .where(member.username.eq(member.username.lower()))
+                /*.where(member.username.eq(
+                        Expressions.stringTemplate("function('lower', {0})", member.username)
+                ))*/
+                .fetch();
+
+        for (String string : strings) {
+            System.out.println("string = " + string);
+        }
     }
 
 }
