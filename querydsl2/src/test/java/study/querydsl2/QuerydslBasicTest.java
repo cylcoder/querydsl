@@ -14,7 +14,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl2.dto.MemberDto;
 import study.querydsl2.dto.QMemberDto;
@@ -28,7 +27,7 @@ import java.util.function.Supplier;
 
 import static com.querydsl.core.types.ExpressionUtils.as;
 import static com.querydsl.core.types.Projections.*;
-import static com.querydsl.core.types.dsl.Expressions.*;
+import static com.querydsl.core.types.dsl.Expressions.stringTemplate;
 import static com.querydsl.jpa.JPAExpressions.select;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
