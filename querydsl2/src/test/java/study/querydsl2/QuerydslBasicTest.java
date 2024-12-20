@@ -1,5 +1,6 @@
 package study.querydsl2;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.CaseBuilder;
@@ -604,6 +605,32 @@ class QuerydslBasicTest {
         for (MemberDto member : members) {
             System.out.println("member = " + member);
         }
+    }
+
+    @Test
+    void dynamicQueryBooleanBuilder() {
+        String usernameParam = "member1";
+        Integer ageParam = null;
+
+        List<Member> members = searchMember1(usernameParam, ageParam);
+        assertThat(members).hasSize(1);
+    }
+
+    private List<Member> searchMember1(String usernameCond, Integer ageCond) {
+        BooleanBuilder builder = new BooleanBuilder();
+
+        if (usernameCond != null) {
+            builder.and(member.username.eq(usernameCond));
+        }
+
+        if (ageCond != null) {
+            builder.and(member.age.eq(ageCond));
+        }
+
+        return factory
+                .selectFrom(member)
+                .where(builder)
+                .fetch();
     }
 
 
