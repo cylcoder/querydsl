@@ -3,7 +3,6 @@ package study.querydsl2;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
-import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
@@ -15,7 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.web.config.EnableSpringDataWebSupport;
+import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl2.dto.MemberDto;
 import study.querydsl2.dto.QMemberDto;
@@ -27,7 +26,7 @@ import study.querydsl2.entity.Team;
 import java.util.List;
 import java.util.function.Supplier;
 
-import static com.querydsl.core.types.ExpressionUtils.*;
+import static com.querydsl.core.types.ExpressionUtils.as;
 import static com.querydsl.core.types.Projections.*;
 import static com.querydsl.jpa.JPAExpressions.select;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -700,6 +699,36 @@ class QuerydslBasicTest {
 
     private BooleanBuilder allEqBuilder(String usernameCond, Integer ageCond) {
         return usernameEqBuilder(usernameCond).and(ageEqBuilder(ageCond));
+    }
+
+    @Test
+    void bulkUpdate() {
+        long count = factory
+                .update(member)
+                .set(member.username, "locked")
+                .where(member.age.gt(10))
+                .execute();
+
+        em.flush();
+        em.clear();
+
+        assertThat(count).isEqualTo(3);
+    }
+
+    @Test
+    void bulkAdd() {
+        factory
+                .update(member)
+                .set(member.age, member.age.add(1).multiply(2))
+                .execute();
+    }
+
+    @Test
+    void bulkDelete() {
+        factory
+                .delete(member)
+                .where(member.age.lt(20))
+                .execute();
     }
 
 }
