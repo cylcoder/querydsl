@@ -8,12 +8,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.support.PageableExecutionUtils;
 import study.querydsl2.dto.MemberSearchCondition;
 import study.querydsl2.dto.MemberTeamDto;
 import study.querydsl2.dto.QMemberTeamDto;
 
 import java.util.List;
 
+import static org.springframework.data.support.PageableExecutionUtils.getPage;
 import static org.springframework.util.StringUtils.hasText;
 import static study.querydsl2.entity.QMember.member;
 import static study.querydsl2.entity.QTeam.team;
@@ -90,8 +92,9 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                         ageLoe(condition.getAgeLoe())
                 ).fetch();
 
-        int total = content.size();
-        return new PageImpl<>(content, pageable, total);
+//        int total = content.size();
+//        return new PageImpl<>(content, pageable, total);
+        return getPage(content, pageable, content::size);
     }
 
     private BooleanExpression usernameEq(String username) {
