@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import study.practice.dto.OrderProduct;
 import study.practice.dto.OrderStatusSummary;
 import study.practice.dto.OrderSummary;
+import study.practice.dto.ProductOrderCount;
 import study.practice.model.Product;
 import study.practice.repository.PracticeRepository;
 
@@ -35,6 +36,10 @@ public class PracticeService {
 
     public OrderProduct getOrderProducts(Long productId, Long page, Long size) {
         return practiceRepository.getOrderProducts(productId, (page - 1) * size, size);
+    }
+
+    public ProductOrderCount getProductOrderCount(Long productId) {
+        return practiceRepository.getProductOrderCount(productId);
     }
 
 }

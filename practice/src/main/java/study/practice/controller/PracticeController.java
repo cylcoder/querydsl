@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import study.practice.dto.OrderProduct;
 import study.practice.dto.OrderStatusSummary;
 import study.practice.dto.OrderSummary;
+import study.practice.dto.ProductOrderCount;
 import study.practice.model.Product;
 import study.practice.service.PracticeService;
 
@@ -54,6 +55,11 @@ public class PracticeController {
             @RequestParam(defaultValue = "1") Long page,
             @RequestParam(defaultValue = "10") Long size) {
         return practiceService.getOrderProducts(productId, page, size);
+    }
+
+    @GetMapping("/products/{productId}/order-count")
+    public ProductOrderCount getProductOrderCount(@PathVariable Long productId) {
+        return practiceService.getProductOrderCount(productId);
     }
 
 }

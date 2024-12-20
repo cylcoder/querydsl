@@ -4,10 +4,7 @@ import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Repository;
-import study.practice.dto.OrderProduct;
-import study.practice.dto.OrderResponse;
-import study.practice.dto.OrderStatusSummary;
-import study.practice.dto.OrderSummary;
+import study.practice.dto.*;
 import study.practice.model.Product;
 
 import java.util.HashMap;
@@ -103,6 +100,16 @@ public class PracticeRepository {
                 .toList();
 
         return OrderProduct.of(productId, orderResponses);
+    }
+
+    public ProductOrderCount getProductOrderCount(Long productId) {
+        return factory
+                .select(new QProductOrderCount(product.id, product.name, order.count()))
+                .from(order)
+                .join(order.product, product)
+                .groupBy(product.id)
+                .having(product.id.eq(productId))
+                .fetchOne();
     }
 
 }
