@@ -2,13 +2,11 @@ package study.querydsl2.repository;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.support.PageableExecutionUtils;
 import study.querydsl2.dto.MemberSearchCondition;
 import study.querydsl2.dto.MemberTeamDto;
 import study.querydsl2.dto.QMemberTeamDto;
