@@ -2,14 +2,21 @@ package com.example.querydsl;
 
 import static com.example.querydsl.entity.QMember.member;
 import static com.example.querydsl.entity.QTeam.team;
+import static com.querydsl.core.types.Projections.bean;
+import static com.querydsl.core.types.Projections.constructor;
+import static com.querydsl.core.types.Projections.fields;
 import static com.querydsl.jpa.JPAExpressions.select;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.example.querydsl.dto.MemberDto;
+import com.example.querydsl.dto.QMemberDto;
 import com.example.querydsl.entity.Member;
 import com.example.querydsl.entity.QMember;
 import com.example.querydsl.entity.Team;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -435,6 +442,214 @@ class QuerydslBasicTest {
         .fetchOne();
 
     System.out.println("baz = " + baz);
+  }
+
+  @Test
+  void simpleProjection() {
+    List<String> names = queryFactory
+        .select(member.username)
+        .from(member)
+        .fetch();
+
+    System.out.println("names = " + names);
+  }
+
+  @Test
+  void tupleProject() {
+    List<Tuple> tuples = queryFactory
+        .select(member.username, member.age)
+        .from(member)
+        .fetch();
+
+    for (Tuple tuple : tuples) {
+      System.out.println("username = " + tuple.get(member.username));
+      System.out.println("age = " + tuple.get(member.age));
+    }
+  }
+
+  @Test
+  void findDtoByJPQL() {
+    List<MemberDto> memberDtos = entityManager.createQuery(
+        "select new com.example.querydsl.dto.MemberDto(m.username, m.age) from Member m",
+        MemberDto.class).getResultList();
+    memberDtos.forEach(System.out::println);
+  }
+
+  @Test
+  void findDtoBySetter() {
+    List<MemberDto> memberDtos = queryFactory
+        .select(bean(
+            MemberDto.class,
+            member.username,
+            member.age
+        ))
+        .from(member)
+        .fetch();
+
+    memberDtos.forEach(System.out::println);
+  }
+
+  @Test
+  void findDtoByField() {
+    List<MemberDto> memberDtos = queryFactory
+        .select(fields(
+            MemberDto.class,
+            member.username,
+            member.age
+        ))
+        .from(member)
+        .fetch();
+
+    memberDtos.forEach(System.out::println);
+  }
+
+  @Test
+  void findDtoByConstructor() {
+    List<MemberDto> memberDtos = queryFactory
+        .select(constructor(
+            MemberDto.class,
+            member.age,
+            member.age
+        ))
+        .from(member)
+        .fetch();
+
+    memberDtos.forEach(System.out::println);
+  }
+
+  @Test
+  void findDtoByQueryProjection() {
+    List<MemberDto> memberDtos = queryFactory
+        .select(new QMemberDto(member.username, member.age))
+        .from(member)
+        .fetch();
+
+    System.out.println("memberDtos = " + memberDtos);
+  }
+
+  @Test
+  void dynamicQueryByBooleanBuilder() {
+    String usernameParam = "baz";
+    int ageParam = 20;
+
+    List<Member> members = searchMember1(usernameParam, ageParam);
+    assertThat(members).hasSize(1);
+  }
+
+  private List<Member> searchMember1(String usernameCond, Integer ageCond) {
+    BooleanBuilder booleanBuilder = new BooleanBuilder();
+    if (usernameCond != null) {
+      booleanBuilder.and(member.username.eq(usernameCond));
+    }
+
+    if (ageCond != null) {
+      booleanBuilder.and(member.age.eq(ageCond));
+    }
+
+    return queryFactory
+        .selectFrom(member)
+        .where(booleanBuilder)
+        .fetch();
+  }
+
+  @Test
+  void dynamicQueryByWhereParam() {
+    String usernameParam = "baz";
+    int ageParam = 20;
+
+    List<Member> members = searchMember2(usernameParam, ageParam);
+    assertThat(members).hasSize(1);
+  }
+
+  private List<Member> searchMember2(String usernameCond, Integer ageCond) {
+    return queryFactory
+        .selectFrom(member)
+        .where(usernameEq(usernameCond), ageEq(ageCond))
+        .fetch();
+  }
+
+  private List<Member> searchMember3(String usernameCond, Integer ageCond) {
+    return queryFactory
+        .selectFrom(member)
+        .where(allEq(usernameCond, ageCond))
+        .fetch();
+  }
+
+  private BooleanExpression usernameEq(String usernameCond) {
+    return usernameCond != null ? member.username.eq(usernameCond) : null;
+  }
+
+  private BooleanExpression ageEq(Integer ageCond) {
+    return ageCond != null ? member.age.eq(ageCond) : null;
+  }
+
+  private BooleanExpression allEq(String usernameCond, Integer ageCond) {
+    return usernameEq(usernameCond).and(ageEq(ageCond));
+  }
+
+  @Test
+  void bulkUpdate() {
+    queryFactory
+        .update(member)
+        .set(member.username, "30세 미만")
+        .where(member.age.lt(30))
+        .execute();
+
+    // update는 영속성 컨텍스트가 아닌 DB로 직접 쿼리를 날림
+    // 영속성 컨텍스트를 비워주지 않으면 수정 전의 데이터가 조회됨
+    entityManager.flush();
+    entityManager.clear();
+
+    queryFactory
+        .selectFrom(member)
+        .fetch()
+        .forEach(System.out::println);
+  }
+
+  @Test
+  void bulkAdd() {
+    queryFactory
+        .update(member)
+        .set(member.age, member.age.add(1)) // 곱하기는 multiply()
+        .execute();
+
+    entityManager.flush();
+    entityManager.clear();
+
+    queryFactory
+        .selectFrom(member)
+        .fetch()
+        .forEach(System.out::println);
+  }
+
+  @Test
+  void bulkDelete() {
+    queryFactory
+        .delete(member)
+        .where(member.age.loe(20))
+        .execute();
+
+    entityManager.flush();
+    entityManager.clear();
+
+    queryFactory
+        .selectFrom(member)
+        .fetch()
+        .forEach(System.out::println);
+  }
+
+  @Test
+  void sqlFunction() {
+    String s = queryFactory
+        .select(Expressions.stringTemplate(
+            "function('replace', {0}, {1}, {2})",
+            member.username,
+            "z", "s")
+        )
+        .from(member)
+        .fetchFirst();
+
+    System.out.println("s = " + s);
   }
 
 }
