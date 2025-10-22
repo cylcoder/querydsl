@@ -1,10 +1,12 @@
 package com.example.querydsl.repository;
 
+import static com.example.querydsl.entity.QMember.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.querydsl.dto.MemberSearchCondition;
 import com.example.querydsl.dto.MemberTeamDto;
 import com.example.querydsl.entity.Member;
+import com.example.querydsl.entity.QMember;
 import com.example.querydsl.entity.Team;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -93,6 +95,32 @@ class MemberRepositoryTest {
     assertThat(page.getContent())
         .extracting("username")
         .containsExactly("baz", "qux", "quux");
+  }
+
+  @Test
+  void querydslPredicateExecutorTest() {
+    Team foo = new Team("foo");
+    Team bar = new Team("bar");
+    entityManager.persist(foo);
+    entityManager.persist(bar);
+
+    Member baz = new Member("baz", 10, foo);
+    Member qux = new Member("qux", 20, foo);
+    Member quux = new Member("quux", 30, bar);
+    Member corge = new Member("corge", 40, bar);
+    entityManager.persist(baz);
+    entityManager.persist(qux);
+    entityManager.persist(quux);
+    entityManager.persist(corge);
+
+    Iterable<Member> members = memberRepository.findAll(
+        member.age.between(10, 40)
+            .and(member.username.eq("quux"))
+    );
+
+    for (Member member : members) {
+      System.out.println("member = " + member);
+    }
   }
 
 }
