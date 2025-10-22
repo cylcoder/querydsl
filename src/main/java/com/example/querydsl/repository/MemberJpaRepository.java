@@ -1,19 +1,16 @@
 package com.example.querydsl.repository;
 
 import static com.example.querydsl.entity.QMember.member;
-import static com.example.querydsl.entity.QTeam.*;
+import static com.example.querydsl.entity.QTeam.team;
 import static org.springframework.util.StringUtils.hasText;
 
-import com.example.querydsl.dto.MemberDto;
 import com.example.querydsl.dto.MemberSearchCondition;
 import com.example.querydsl.dto.MemberTeamDto;
 import com.example.querydsl.dto.QMemberTeamDto;
 import com.example.querydsl.entity.Member;
-import com.example.querydsl.entity.QTeam;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPQLQueryFactory;
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Optional;

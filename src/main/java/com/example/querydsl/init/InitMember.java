@@ -3,6 +3,7 @@ package com.example.querydsl.init;
 import com.example.querydsl.entity.Member;
 import com.example.querydsl.entity.Team;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,11 @@ public class InitMember {
     itemMemberService.init();
   }
 
+  @PreDestroy
+  public void cleanUp() {
+    itemMemberService.cleanUp();
+  }
+
   @Component
   static class ItemMemberService {
     @PersistenceContext
@@ -38,6 +44,16 @@ public class InitMember {
         Team team = (i % 2 == 0 ? foo : bar);
         entityManager.persist(new Member("baz" + i, i, team));
       }
+    }
+
+    public void cleanUp() {
+      entityManager
+          .createQuery("delete from Member")
+          .executeUpdate();
+
+      entityManager
+          .createQuery("delete from Team")
+          .executeUpdate();
     }
   }
 

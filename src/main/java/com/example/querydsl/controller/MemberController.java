@@ -3,8 +3,11 @@ package com.example.querydsl.controller;
 import com.example.querydsl.dto.MemberSearchCondition;
 import com.example.querydsl.dto.MemberTeamDto;
 import com.example.querydsl.repository.MemberJpaRepository;
+import com.example.querydsl.repository.MemberRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -13,10 +16,31 @@ import org.springframework.web.bind.annotation.RestController;
 public class MemberController {
 
   private final MemberJpaRepository memberJpaRepository;
+  private final MemberRepository memberRepository;
 
   @GetMapping("/v1/members")
   public List<MemberTeamDto> searchMemberV1(MemberSearchCondition memberSearchCondition) {
     return memberJpaRepository.searchByWhere(memberSearchCondition);
+  }
+
+  @GetMapping("/v2/members")
+  public Page<MemberTeamDto> searchMemberV2(
+      MemberSearchCondition memberSearchCondition,
+      Pageable pageable
+  ) {
+    return memberRepository.searchPageSimple(
+        memberSearchCondition, pageable
+    );
+  }
+
+  @GetMapping("/v3/members")
+  public Page<MemberTeamDto> searchMemberV3(
+      MemberSearchCondition memberSearchCondition,
+      Pageable pageable
+  ) {
+    return memberRepository.searchPageComplex(
+        memberSearchCondition, pageable
+    );
   }
 
 }
